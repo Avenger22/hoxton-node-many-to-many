@@ -130,8 +130,8 @@ CREATE TABLE IF NOT EXISTS interviewers (
 
 CREATE TABLE IF NOT EXISTS interviews (
   id INTEGER,
-  applicantId INTEGER NOT NULL,
-  interviewerId INTEGER NOT NULL,
+  applicantId INTEGER,
+  interviewerId INTEGER,
   date TEXT NOT NULL,
   score INTEGER NOT NULL,
   PRIMARY KEY (id),

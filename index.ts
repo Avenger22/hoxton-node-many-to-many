@@ -231,6 +231,17 @@ app.post('/interviewers', (req, res) => {
 app.delete('/interviewers/:id', (req, res) => {
 
   const id = req.params.id
+  const interviews = getAllinterviews.all()
+
+  for (const interview of interviews) {
+
+    if (interview.interviewerId === id) {
+      console.log("interview deleting id :", interview)
+      deleteInterview.run(interview.id)
+    }
+
+  }
+
   const info = deleteInterviewer.run(id)
 
   if (info.changes === 0) {
