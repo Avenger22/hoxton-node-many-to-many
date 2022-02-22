@@ -1,3 +1,4 @@
+// #region "importing and cofig stuff"
 import express from "express";
 import Database from "better-sqlite3";
 import cors from "cors";
@@ -10,6 +11,7 @@ app.use(express.json());
 const db = new Database("./data.db", {
   verbose: console.log,
 });
+// #endregion
 
 // #region "Sql queries"
 const getAllApplicants = db.prepare(`
@@ -42,7 +44,7 @@ WHERE interviews.interviewerId = ?;`)
 
 const getInterviewerByApplicantId = db.prepare(`SELECT DISTINCT interviewers.*, interviews.date, interviews.score FROM interviewers
 JOIN interviews ON interviewers.id = interviews.interviewerId
-WHERE interviews.applicantId = ?;`)
+WHERE interviews.applicantId = ?;`) // if i want to remove duplicates just remove .date and .score and that new date with same entry will be removed
 
 const deleteApplicant = db.prepare(`
 DELETE FROM applicants WHERE id = ?;
@@ -56,8 +58,12 @@ const deleteInterview = db.prepare(`
 DELETE FROM interviews WHERE id = ?;
 `)
 
-// const deleteApplicantInterwers = db.prepare(`
-// DELETE FROM interviwers WHERE applicantId = ?;
+// const deleteApplicantInterviews = db.prepare(`
+// DELETE FROM interviews WHERE applicantId = ?;
+// `)
+
+// const deleteInterviewerInterviews = db.prepare(`
+// DELETE FROM interviews WHERE interviewerId = ?;
 // `)
 
 const updateApplicant = db.prepare(`
@@ -96,10 +102,18 @@ app.get("/applicants/:id", (req, res) => {
   const id = req.params.id;
   const applicant = getApplicantById.get(id);
   
-  const interviewer = getInterviewerByApplicantId.all(applicant.id)
-  applicant.interviewer = interviewer;
+  if (applicant) {
 
-  res.send(applicant);
+    const interviewer = getInterviewerByApplicantId.all(applicant.id)
+    applicant.interviewer = interviewer;
+
+    res.send(applicant);
+
+  }
+
+  else {
+    res.send({"error": "undefined"})
+  }
 
 });
 
@@ -179,10 +193,18 @@ app.get("/interviewers/:id", (req, res) => {
   const id = req.params.id;
   const interviewer = getInterviewerById.get(id);
 
-  const applicants = getApplicantByinterviewerId.all(interviewer.id)
-  interviewer.applicants = applicants;
+  if (interviewer) {
 
-  res.send(interviewer);
+    const applicants = getApplicantByinterviewerId.all(interviewer.id)
+    interviewer.applicants = applicants;
+
+    res.send(interviewer);
+
+  }
+
+  else {
+    res.send({"error": "undefined"})
+  }
 
 });
 
@@ -250,10 +272,16 @@ app.get("/interviews", (req, res) => {
 
 app.get("/interviews/:id", (req, res) => {
 
-  const id = req.params.id;
+    const id = req.params.id;
+    const interview = getInterviewById.get(id);
 
-  const interview = getInterviewById.get(id);
-  res.send(interview);
+    if (interview) {
+      res.send(interview);
+    }
+
+    else {
+      res.send({"error": "undefined"})
+    }
 
 });
 
