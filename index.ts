@@ -1,6 +1,7 @@
 import express from "express";
 import Database from "better-sqlite3";
 import cors from "cors";
+import {createApplicant, createInterview, createInterviewer} from "./setup"
 
 const app = express();
 app.use(cors());
@@ -42,9 +43,39 @@ WHERE interviews.interviewerId = ?;`)
 const getInterviewerByApplicantId = db.prepare(`SELECT DISTINCT interviewers.*, interviews.date, interviews.score FROM interviewers
 JOIN interviews ON interviewers.id = interviews.interviewerId
 WHERE interviews.applicantId = ?;`)
+
+const deleteApplicant = db.prepare(`
+DELETE FROM applicants WHERE id = ?;
+`)
+
+const deleteInterviewer = db.prepare(`
+DELETE FROM interviewers WHERE id = ?;
+`)
+
+const deleteInterview = db.prepare(`
+DELETE FROM interviews WHERE id = ?;
+`)
+
+// const deleteApplicantInterwers = db.prepare(`
+// DELETE FROM interviwers WHERE applicantId = ?;
+// `)
+
+const updateApplicant = db.prepare(`
+UPDATE applicants SET name = ?, email = ?;
+`)
+
+const updateInterviewer = db.prepare(`
+UPDATE interviewers SET name = ?, email = ?;
+`)
+
+const updateInterview = db.prepare(`
+UPDATE interviews SET applicantId = ?, interviewerId = ?, date = ?, score = ?;
+`)
 // #endregion
 
 // #region 'End points API'
+
+// #region 'APPLICANTS end points'
 app.get("/applicants", (req, res) => {
 
   const applicants = getAllApplicants.all();
@@ -72,7 +103,62 @@ app.get("/applicants/:id", (req, res) => {
 
 });
 
+app.post('/applicants', (req, res) => {
 
+  // creating an museum is still the same as last week
+  const { name, email } = req.body
+  const info = createApplicant.run(name, email)
+
+  // const errors = []
+
+  // if (typeof name !== 'string') errors.push()
+
+  if (info.changes > 0) {
+    const applicant = getApplicantById.get(info.lastInsertRowid)
+    res.send(applicant)
+  } 
+  
+  else {
+    res.send({ error: 'Something went wrong.' })
+  }
+
+})
+
+app.delete('/applicants/:id', (req, res) => {
+
+  const id = req.params.id
+  const info = deleteApplicant.run(id)
+
+  if (info.changes === 0) {
+    res.status(404).send({ error: 'applicant not found.' })
+  } 
+  
+  else {
+    res.send({ message: 'applicant deleted.' })
+  }
+
+})
+
+app.patch('/applicants/:id', (req, res) => {
+
+  const id = req.params.id;
+  const { name, email } = req.body
+
+  const info = updateApplicant.run(name, email)
+  const updatedApplicant = getApplicantById.get(Number(id))
+
+  if (info.changes > 0) {
+    res.send(updatedApplicant)
+  }
+
+  else {
+    res.send({ error: 'Something went wrong.' })
+  }
+
+})
+// #endregion
+
+// #region 'INTERVIEWERS end points'
 app.get("/interviewers", (req, res) => {
 
   const interviewers = getAllInterviewers.all();
@@ -100,7 +186,61 @@ app.get("/interviewers/:id", (req, res) => {
 
 });
 
+app.post('/interviewers', (req, res) => {
 
+  const { name, email } = req.body
+  const info = createInterviewer.run(name, email)
+
+  // const errors = []
+
+  // if (typeof name !== 'string') errors.push()
+
+  if (info.changes > 0) {
+    const interviewer = getInterviewerById.get(info.lastInsertRowid)
+    res.send(interviewer)
+  } 
+  
+  else {
+    res.send({ error: 'Something went wrong.' })
+  }
+
+})
+
+app.delete('/interviewers/:id', (req, res) => {
+
+  const id = req.params.id
+  const info = deleteInterviewer.run(id)
+
+  if (info.changes === 0) {
+    res.status(404).send({ error: 'interviewer not found.' })
+  } 
+  
+  else {
+    res.send({ message: 'interviewer deleted.' })
+  }
+
+})
+
+app.patch('/interviewers/:id', (req, res) => {
+
+  const id = req.params.id;
+  const { name, email } = req.body
+
+  const info = updateInterview.run(name, email)
+  const updatedInterviewer = getInterviewerById.get(Number(id))
+
+  if (info.changes > 0) {
+    res.send(updatedInterviewer)
+  }
+
+  else {
+    res.send({ error: 'Something went wrong.' })
+  }
+
+})
+// #endregion
+
+// #region 'INTERVIEWS end points'
 app.get("/interviews", (req, res) => {
 
   const interviews = getAllinterviews.all();
@@ -116,6 +256,63 @@ app.get("/interviews/:id", (req, res) => {
   res.send(interview);
 
 });
+
+app.post('/interviews', (req, res) => {
+
+  // creating an museum is still the same as last week
+  const { applicantId, interviewerId, date, score } = req.body
+  const info = createInterview.run(applicantId, interviewerId, date, score)
+
+  // const errors = []
+
+  // if (typeof name !== 'string') errors.push()
+
+  if (info.changes > 0) {
+    const interview = getInterviewById.get(info.lastInsertRowid)
+    res.send(interview)
+  } 
+  
+  else {
+    res.send({ error: 'Something went wrong.' })
+  }
+
+})
+
+app.delete('/interviews/:id', (req, res) => {
+
+  const id = req.params.id
+
+  const info = deleteInterview.run(id)
+
+  if (info.changes === 0) {
+    res.status(404).send({ error: 'interview not found.' })
+  } 
+  
+  else {
+    res.send({ message: 'interview deleted.' })
+  }
+
+})
+
+app.patch('/interviews/:id', (req, res) => {
+
+  const id = req.params.id;
+  const { applicantId, interviewerId, date, score } = req.body
+
+  const info = updateInterview.run(applicantId, interviewerId, date, score)
+  const updatedInterview = getInterviewById.get(Number(id))
+
+  if (info.changes > 0) {
+    res.send(updatedInterview)
+  }
+
+  else {
+    res.send({ error: 'Something went wrong.' })
+  }
+
+})
+// #endregion
+
 // #endregion
 
 app.listen(4000, () => console.log(`Listening on: http://localhost:4000`));

@@ -140,15 +140,15 @@ CREATE TABLE IF NOT EXISTS interviews (
 );
 `)
 
-const createApplicant = db.prepare(`
+export const createApplicant = db.prepare(`
 INSERT INTO applicants (name, email) VALUES (?, ?);
 `)
 
-const createInterviewer = db.prepare(`
+export const createInterviewer = db.prepare(`
 INSERT INTO interviewers (name, email) VALUES (?, ?);
 `)
 
-const createInterview = db.prepare(`
+export const createInterview = db.prepare(`
 INSERT INTO interviews (applicantId, interviewerId, date, score)
 VALUES (?, ? ,?, ?);
 `)
