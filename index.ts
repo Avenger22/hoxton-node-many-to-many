@@ -14,6 +14,12 @@ const db = new Database("./data.db", {
 // #endregion
 
 // #region "Sql queries"
+// const getInterviewsFromApplicant = db.prepare(`
+// SELECT interviews.*, interviewers.name as 'interviewerName', interviewers.email as 'interviewerEmail' FROM interviews
+// JOIN interviewers ON interviews.interviewerId = interviewers.id
+// WHERE interviews.applicantId = ?;
+// `)
+
 const getAllApplicants = db.prepare(`
 SELECT applicants.* FROM applicants;
 `);
@@ -77,6 +83,14 @@ UPDATE interviewers SET name = ?, email = ?;
 const updateInterview = db.prepare(`
 UPDATE interviews SET applicantId = ?, interviewerId = ?, date = ?, score = ?;
 `)
+
+const deleteAllInterviewsForApplicant = db.prepare(`
+DELETE FROM interviews WHERE applicantId = ?;
+`)
+
+const deleteAllInterviewsForInterviewer = db.prepare(`
+DELETE FROM interviews WHERE interviewerId = ?;
+`)
 // #endregion
 
 // #region 'End points API'
@@ -89,7 +103,7 @@ app.get("/applicants", (req, res) => {
   for (const applicant of applicants) {
 
     const interviewer = getInterviewerByApplicantId.all(applicant.id)
-    applicant.interviewer = interviewer;
+    applicant.interviewers = interviewer;
 
   }
 
@@ -141,6 +155,7 @@ app.post('/applicants', (req, res) => {
 app.delete('/applicants/:id', (req, res) => {
 
   const id = req.params.id
+  deleteAllInterviewsForApplicant.run(id)
   const info = deleteApplicant.run(id)
 
   if (info.changes === 0) {
@@ -231,6 +246,7 @@ app.post('/interviewers', (req, res) => {
 app.delete('/interviewers/:id', (req, res) => {
 
   const id = req.params.id
+  deleteAllInterviewsForInterviewer.run(id)
   const interviews = getAllinterviews.all()
 
   for (const interview of interviews) {
@@ -320,7 +336,6 @@ app.post('/interviews', (req, res) => {
 app.delete('/interviews/:id', (req, res) => {
 
   const id = req.params.id
-
   const info = deleteInterview.run(id)
 
   if (info.changes === 0) {
